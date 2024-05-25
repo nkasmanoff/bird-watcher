@@ -36,7 +36,8 @@ def generate_bounding_boxes(model, processor):
 
 
 def plot_bounding_boxes(image, found_objects, current_time):
-
+    # clear figure
+    plt.figure()
     plt.imshow(image)
     ax = plt.gca()
     for obj in found_objects:
