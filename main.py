@@ -17,9 +17,8 @@ def convert_unix_time_to_human_readable(unix_time):
 
 
 def generate_bounding_boxes(model, processor):
+
     image = Image.open("data/detr/image.jpg")
-    current_time = time.time()
-    current_time = convert_unix_time_to_human_readable(current_time)
     inputs = processor(images=image, return_tensors="pt")
     outputs = model(**inputs)
 
@@ -31,12 +30,13 @@ def generate_bounding_boxes(model, processor):
     found_objects = []
     for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
         found_objects.append(
-            {'score': score.item(), 'label': model.config.id2label[label.item()], 'box': box.tolist(),  'time': current_time})
+            {'score': score.item(), 'label': model.config.id2label[label.item()], 'box': box.tolist()})
 
     return found_objects
 
 
-def plot_bounding_boxes(image, found_objects):
+def plot_bounding_boxes(image, found_objects, current_time):
+
     plt.imshow(image)
     ax = plt.gca()
     for obj in found_objects:
@@ -48,7 +48,7 @@ def plot_bounding_boxes(image, found_objects):
             box[0], box[1], f'{obj["label"]}: {obj["score"]}', fontsize=12, color='red')
     plt.axis('off')
     # save image
-    plt.savefig(f"data/images/{obj['time']}.jpg")
+    plt.savefig(f"data/images/{current_time}.jpg")
 
 
 def count_birds(found_objects):
@@ -63,6 +63,8 @@ def count_birds(found_objects):
 def update_bird_tracker():
     os.system("libcamera-still -o data/detr/image.jpg")
     found_objects = generate_bounding_boxes(model, processor)
+    current_time = time.time()
+    current_time = convert_unix_time_to_human_readable(current_time)
 
     bird_count = count_birds(found_objects)
     print("Number of birds: ", bird_count)
@@ -73,12 +75,13 @@ def update_bird_tracker():
     with open("data/images.json", "r") as file:
         data = json.load(file)
 
-    data.append({'time': found_objects[0]['time'], 'numBirds': bird_count})
+
+    data.append({'time': current_time, 'numBirds': bird_count})
 
     with open("data/images.json", "w") as file:
         json.dump(data, file)
 
-    plot_bounding_boxes(Image.open("data/detr/image.jpg"), found_objects)
+    plot_bounding_boxes(Image.open("data/detr/image.jpg"), found_objects, current_time)
 
 
 def bird_tracker_loop():
