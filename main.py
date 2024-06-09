@@ -25,7 +25,7 @@ def generate_bounding_boxes(model, processor):
     target_sizes = tensor([image.size[::-1]])
 
     results = processor.post_process_object_detection(
-        outputs, target_sizes=target_sizes, threshold=0.9)[0]
+        outputs, target_sizes=target_sizes, threshold=0.1)[0]
 
     found_objects = []
     for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
@@ -37,13 +37,13 @@ def generate_bounding_boxes(model, processor):
 
 def plot_bounding_boxes(image, found_objects, current_time):
     # clear figure
-    plt.figure()
+    plt.figure(figsize=(25,25))
     plt.imshow(image)
     ax = plt.gca()
     for obj in found_objects:
         box = obj['box']
         rect = plt.Rectangle((box[0], box[1]), box[2] - box[0], box[3] - box[1],
-                             fill=False, edgecolor='red', linewidth=2)
+                             fill=False, edgecolor='red', linewidth=1)
         ax.add_patch(rect)
         plt.text(
             box[0], box[1], f'{obj["label"]}: {obj["score"]}', fontsize=12, color='red')
@@ -62,10 +62,13 @@ def count_birds(found_objects):
 
 
 def update_bird_tracker():
-    os.system("libcamera-still -o data/detr/image.jpg")
+    os.system(f"libcamera-still -o data/detr/image.jpg")
+
     found_objects = generate_bounding_boxes(model, processor)
     current_time = time.time()
     current_time = convert_unix_time_to_human_readable(current_time)
+
+    os.rename("data/detr/image.jpg", f"data/detr/{current_time}.jpg")
 
     bird_count = count_birds(found_objects)
     print("Number of birds: ", bird_count)
@@ -82,7 +85,7 @@ def update_bird_tracker():
     with open("data/images.json", "w") as file:
         json.dump(data, file)
 
-    plot_bounding_boxes(Image.open("data/detr/image.jpg"), found_objects, current_time)
+   # plot_bounding_boxes(Image.open("data/detr/image.jpg"), found_objects, current_time)
 
 
 def bird_tracker_loop():
@@ -92,13 +95,13 @@ def bird_tracker_loop():
         temp = float(temp.split('=')[1].split("'")[0])
         print("Current temp: ", temp)
         if temp <= 60:
-            time.sleep(30)
+            time.sleep(180)
 
         elif temp > 60 and temp < 70:
-            time.sleep(120)
+            time.sleep(300)
 
         elif temp > 70:
-            time.sleep(300)
+            time.sleep(600)
 
 
 if __name__ == "__main__":

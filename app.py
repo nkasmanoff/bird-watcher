@@ -10,7 +10,7 @@ def load_images(folder):
             images.append(os.path.join(folder, file))
         images.sort(key=os.path.getmtime)
 
-    return images
+    return images[::-1]
 
 
 def load_image_results(file_path):
@@ -18,7 +18,7 @@ def load_image_results(file_path):
 
 
 results_df = load_image_results("data/images.json")
-images = load_images("data/images")
+images = load_images("data/detr")
 
 st.title("Bird Watcher 🐦")
 
@@ -31,10 +31,13 @@ st.line_chart(results_df.set_index("time")["numBirds"]
 
 
 st.markdown("## Taken Photos")
-selected_image = st.selectbox("Select an image", images)
-st.image(selected_image, width=300)
+if len(images) > 0:
+    
+    selected_image = st.selectbox("Select an image", images)
+
+    st.image(selected_image)
 
 
 if st.button("Refresh"):
     results_df = load_image_results("data/images.json")
-    images = load_images("data/images")
+    images = load_images("data/detr")
