@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import pandas as pd
-
+from main import update_bird_tracker
 
 def load_images(folder):
     images = []
@@ -39,5 +39,11 @@ if len(images) > 0:
 
 
 if st.button("Refresh"):
+    results_df = load_image_results("data/images.json")
+    images = load_images("data/detr")
+
+
+if st.button("Take photo"):
+    update_bird_tracker()
     results_df = load_image_results("data/images.json")
     images = load_images("data/detr")
